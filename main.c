@@ -19,17 +19,15 @@ int main() {
 		return 1;
 	}
 
-	elev_set_motor_direction(DIRN_UP);
+	setMotorDir(DIRN_UP);
 	floor floors[N_FLOORS];
 	for (int i = FLOOR_1; i <= FLOOR_4; i++) {
-		floors[i].downOrder = false;
-		floors[i].upOrder = false;
-		floors[i].innerOrder = false;
+        clearOrders(floors, i);
 	}
 	current_floor current = UNDEFINED;
 	elev_motor_direction_t dir = DIRN_UP;
 	elev_motor_direction_t oldDir = dir;
-	elev_set_motor_direction(dir);
+	setMotorDir(dir);
 	state activeState = UNDEF_STATE;
 	int timeCount = 0;
 	int THREE_SEC = 3000000 / DELAY;
@@ -47,7 +45,7 @@ int main() {
 					activeState = STOP;
 					oldDir = dir;
 					dir = DIRN_STOP;
-					elev_set_motor_direction(dir);
+					setMotorDir(dir);
 					setDoorOpen(true);
 					timeCount = 0;
 				}
@@ -59,7 +57,7 @@ int main() {
 			if (timeCount++ == THREE_SEC) {
 				if (doStartup(current, floors, &dir, oldDir)) {
 					activeState = RUN;
-					elev_set_motor_direction(dir);
+					setMotorDir(dir);
 				} else {
 					activeState = REST;
 				}
@@ -71,7 +69,7 @@ int main() {
 			updateLights(floors);
 			if (doStartup(current, floors, &dir, oldDir)) {
 				activeState = RUN;
-				elev_set_motor_direction(dir);
+				setMotorDir(dir);
 			}
 			if (hasOrders(floors, current)) {
 				clearOrders(floors, current);
@@ -85,19 +83,23 @@ int main() {
 				updateFloorLight(current);
 				activeState = REST;
 				dir = DIRN_STOP;
-				elev_set_motor_direction(DIRN_STOP);
+				setMotorDir(DIRN_STOP);
 			}
 			break;
 			case FULL_STOP:
 			if (timeCount++ == THREE_SEC) {
 				setDoorOpen(false);
-				activeState = REST;
+                if (current == UNDEFINED) {
+                    activeState = UNDEF_STATE;
+                } else {
+				    activeState = REST;
+                }
 			}
 			break;
 		}
 		if (getStopButton()) {
 			if (activeState != FULL_STOP) {
-				elev_set_motor_direction(DIRN_STOP);
+				setMotorDir(DIRN_STOP);
 				if (activeState != RUN && activeState != UNDEF_STATE) {
 					setDoorOpen(true);
 				}
