@@ -1,6 +1,6 @@
 #include "flow.h"
 
-int DELAY = 10000;
+DELAY = 10000;
 
 void *cycle(void *vargp) {
 	usleep(DELAY);

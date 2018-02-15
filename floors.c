@@ -17,7 +17,6 @@ bool updateCurrentFloor(current_floor *current) {
 	int get = elev_get_floor_sensor_signal();
 	if (get != -1) {
 		if (*current != get) {
-			printf("%i, %i\n", get, *current);
 			*current = get;
 			return true;
 		}
@@ -45,8 +44,8 @@ void updateLights(floor *floors) {
 	}
 }
 
-void getStopButton(bool *button) {
-	button = elev_get_stop_signal();
+bool getStopButton() {
+	return elev_get_stop_signal();
 }
 
 void setDoorOpen(bool status) {

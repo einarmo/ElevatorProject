@@ -22,7 +22,7 @@ void updateLights(floor *floors);
 
 void updateFloorLight(current_floor current);
 
-void getStopButton(bool *button);
+bool getStopButton();
 
 void setDoorOpen(bool status);
 
