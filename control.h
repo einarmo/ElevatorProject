@@ -1,9 +1,11 @@
 #include "floors.h"
+#include "elev.h"
+#include <stdbool.h>
 
-void handleSensorUpdate(current_floor current);
+bool handleSensorUpdate(current_floor current, floor *floors, elev_motor_direction_t dir);
 
-void doStop();
+bool doStartup(current_floor current, floor *floors, elev_motor_direction_t *dir, elev_motor_direction_t oldDir);
 
-void doStartup();
+bool checkOppositeStop(current_floor current, floor *floors, elev_motor_direction_t dir);
 
 

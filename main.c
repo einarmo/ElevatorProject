@@ -1,5 +1,6 @@
 #include "elev.h"
 #include "floors.h"
+#include "flow.h"
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -21,17 +22,25 @@ int main() {
 		floors[i].innerOrder = false;
 	}
 	current_floor current = UNDEFINED;
-	printf("%i\n", current); 
+	printf("%i\n", current);
+	elev_motor_direction_t dir = DIRN_UP;
+	elev_set_motor_direction(dir);
 	while (1) {
-		// Change direction when we reach top/bottom floor
+		pthread_t threadId;
+		pthread_create(&threadId, NULL, cycle, NULL);
 		updateFloorStatus(floors);
 		if (updateCurrentFloor(&current)) {
-		
+			updateFloorLight(current);
+			handleSensorUpdate(current, floors, dir);
 		}
-		updateLights(floors, current);
+		updateLights(floors);
+
+
 		if (elev_get_floor_sensor_signal() == N_FLOORS - 1) {
         		elev_set_motor_direction(DIRN_DOWN);
+			dir = DIRN_DOWN;
 		} else if (elev_get_floor_sensor_signal() == 0) {
+			dir = DIRN_UP;
 			elev_set_motor_direction(DIRN_UP);
 		}
 		// Stop elevator and exit program if the stop button is pressed
@@ -39,6 +48,7 @@ int main() {
 			elev_set_motor_direction(DIRN_STOP);
 			break;
 		}
+		pthread_join(threadId, NULL);
 	}
 	return 0;
 }

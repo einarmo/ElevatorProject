@@ -5,10 +5,10 @@ CC = clang-3.8
 CFLAGS = -g -Wall
 
 # Linker flags go here.
-LDFLAGS = -lcomedi -lm
+LDFLAGS = -lcomedi -lm -lpthread
 
 # list of sources
-ELEVSRC = elev.c io.c main.c floors.c
+ELEVSRC = elev.c io.c main.c floors.c control.c flow.c
 
 # program executable file name.
 TARGET = heis
