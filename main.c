@@ -40,7 +40,6 @@ int main() {
 		// Main state system
 		switch(activeState) {
 			case RUN:
-
 			updateFloorStatus(floors);
 			updateLights(floors);
 			if (updateCurrentFloor(&current)) {
@@ -101,6 +100,7 @@ int main() {
 			case EMERGENCY_STOP:
 			if (!getStopButton()) {
 				if (elev_get_floor_sensor_signal() != -1) {
+					setDoorOpen(true);
 					activeState = STOP;
 					timeCount = 0;
 				} else {
