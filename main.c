@@ -1,11 +1,11 @@
 #include "elev.h"
-#include "floors.h"
+#include "control.h"
 #include "flow.h"
 #include <stdio.h>
 #include <stdbool.h>
 
 typedef enum state {
-	UNDEF_STATE = 0,
+	UNDEFINED_STATE = 0,
 	RUN = 1,
 	STOP = 2,
 	REST = 3,
@@ -28,7 +28,7 @@ int main() {
 	elev_motor_direction_t dir = DIRN_UP;
 	elev_motor_direction_t oldDir = dir;
 	setMotorDir(dir);
-	state activeState = UNDEF_STATE;
+	state activeState = UNDEFINED_STATE;
 	int timeCount = 0;
 	int THREE_SEC = 3000000 / DELAY;
 	while (1) {
@@ -55,7 +55,7 @@ int main() {
 			updateFloorStatus(floors);
 			updateLights(floors);
 			if (timeCount++ == THREE_SEC) {
-				if (doStartup(current, floors, &dir, oldDir)) {
+				if (doStartup(&current, floors, &dir, oldDir, false)) {
 					activeState = RUN;
 					setMotorDir(dir);
 				} else {
@@ -63,11 +63,15 @@ int main() {
 				}
 				setDoorOpen(false);
 			}
+			if (hasOrders(floors, current)) {
+				clearOrders(floors, current);
+				timeCount = 0;
+			}
 			break;
 			case REST:
 			updateFloorStatus(floors);
 			updateLights(floors);
-			if (doStartup(current, floors, &dir, oldDir)) {
+			if (doStartup(&current, floors, &dir, oldDir, true)) {
 				activeState = RUN;
 				setMotorDir(dir);
 			}
@@ -78,7 +82,7 @@ int main() {
 				setDoorOpen(true);
 			}
 			break;
-			case UNDEF_STATE:
+			case UNDEFINED_STATE:
 			if (updateCurrentFloor(&current)) {
 				updateFloorLight(current);
 				activeState = REST;
@@ -87,29 +91,28 @@ int main() {
 			}
 			break;
 			case FULL_STOP:
-			if (timeCount++ == THREE_SEC) {
-				setDoorOpen(false);
-                if (current == UNDEFINED) {
-                    activeState = UNDEF_STATE;
-                } else {
-				    activeState = REST;
-                }
-			}
 			break;
 		}
-		if (getStopButton()) {
-			if (activeState != FULL_STOP) {
-				setMotorDir(DIRN_STOP);
-				if (activeState != RUN && activeState != UNDEF_STATE) {
-					setDoorOpen(true);
-				}
-				activeState = FULL_STOP;
-				for (int i = FLOOR_1; i <= FLOOR_4; i++) {
-					clearOrders(floors, i);
-				}
-				updateLights(floors);
+		if (getStopButton() && activeState != UNDEFINED_STATE && activeState != FULL_STOP) {
+			if (activeState != RUN && elev_get_floor_sensor_signal() != -1) {
+				setDoorOpen(true);
+			} else if (dir != DIRN_STOP) {
+				oldDir = dir;
 			}
-			timeCount = 0;
+			dir = DIRN_STOP;
+			setMotorDir(dir);
+			activeState = FULL_STOP;
+			for (int i = FLOOR_1; i <= FLOOR_4; i++) {
+				clearOrders(floors, i);
+			}
+			updateLights(floors);
+		} else if (activeState == FULL_STOP) {
+			if (elev_get_floor_sensor_signal() != -1) {
+				activeState = STOP;
+				timeCount = 0;
+			} else {
+				activeState = REST;
+			}
 		}
 		pthread_join(threadId, NULL);
 	}

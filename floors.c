@@ -1,5 +1,4 @@
 #include "floors.h"
-#include "elev.h"
 
 void updateFloorStatus(floor *floors) {
 	for (int i = FLOOR_2; i <= FLOOR_4; i++) {
@@ -20,7 +19,6 @@ bool updateCurrentFloor(current_floor *current) {
 			*current = get;
 			return true;
 		}
-		*current = get;
 		return false;
 	}
 	return false;
@@ -45,7 +43,9 @@ void updateLights(floor *floors) {
 }
 
 bool getStopButton() {
-	return elev_get_stop_signal();
+	bool active = elev_get_stop_signal();
+	elev_set_stop_lamp((int) active);
+	return active;
 }
 
 void setDoorOpen(bool status) {

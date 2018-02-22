@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include "elev.h"
 
 typedef enum current_floor {
 	UNDEFINED = -1,

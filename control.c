@@ -17,11 +17,17 @@ bool handleSensorUpdate(current_floor current, floor *floors, elev_motor_directi
 	return false;
 }
 
-bool doStartup(current_floor current, floor *floors, elev_motor_direction_t *dir, elev_motor_direction_t oldDir) {
-	if (hasOrdersInDir(current, floors, oldDir)) {
+bool doStartup(current_floor *current, floor *floors, elev_motor_direction_t *dir, elev_motor_direction_t oldDir, bool fromRest) {
+	if (hasOrdersInDir(*current, floors, oldDir)) {
 		*dir = oldDir;
 		return true;
-	} else if (hasOrdersInDir(current, floors, oldDir * -1)) {
+	}
+	if (fromRest && elev_get_floor_sensor_signal() == -1 && hasOrders(floors, *current)) {
+		*dir = oldDir * -1;
+		*current = UNDEFINED;
+		return true;
+	}
+	if (hasOrdersInDir(*current, floors, oldDir * -1)) {
 		*dir = oldDir * -1;
 		return true;
 	}
