@@ -5,11 +5,11 @@
 #include <stdbool.h>
 
 typedef enum state {
-	UNDEFINED_STATE = 0,
-	RUN = 1,
-	STOP = 2,
-	REST = 3,
-	FULL_STOP = 4
+	UNDEFINED_STATE = 0, // Elevator is at an unknown floor
+	RUN = 1, // Elevator is moving between floors
+	STOP = 2, // Elevator is stopped at a floor
+	REST = 3, // Elevator is stopped and there are no orders
+	EMERGENCY_STOP = 4 // The emergency stop button is being held down
 } state;
 
 int main() {
@@ -18,25 +18,29 @@ int main() {
 	printf("Unable to initialize elevator hardware!\n");
 		return 1;
 	}
-
-	setMotorDir(DIRN_UP);
+	
+	// Initialize system variables
 	floor floors[N_FLOORS];
 	for (int i = FLOOR_1; i <= FLOOR_4; i++) {
-        clearOrders(floors, i);
+        	clearOrders(floors, i);
 	}
-	current_floor current = UNDEFINED;
+	floor_num current = UNDEFINED;
 	elev_motor_direction_t dir = DIRN_UP;
 	elev_motor_direction_t oldDir = dir;
 	setMotorDir(dir);
 	state activeState = UNDEFINED_STATE;
 	int timeCount = 0;
-	int THREE_SEC = 3000000 / DELAY;
+	const int THREE_SEC = 3000000 / DELAY;
+	
 	while (1) {
+		// Initialize timing thread
 		pthread_t threadId;
 		pthread_create(&threadId, NULL, cycle, NULL);
 		
+		// Main state system
 		switch(activeState) {
 			case RUN:
+
 			updateFloorStatus(floors);
 			updateLights(floors);
 			if (updateCurrentFloor(&current)) {
@@ -51,6 +55,7 @@ int main() {
 				}
 			}
 			break;
+
 			case STOP:
 			updateFloorStatus(floors);
 			updateLights(floors);
@@ -68,6 +73,7 @@ int main() {
 				timeCount = 0;
 			}
 			break;
+
 			case REST:
 			updateFloorStatus(floors);
 			updateLights(floors);
@@ -82,6 +88,7 @@ int main() {
 				setDoorOpen(true);
 			}
 			break;
+
 			case UNDEFINED_STATE:
 			if (updateCurrentFloor(&current)) {
 				updateFloorLight(current);
@@ -90,10 +97,21 @@ int main() {
 				setMotorDir(DIRN_STOP);
 			}
 			break;
-			case FULL_STOP:
+
+			case EMERGENCY_STOP:
+			if (!getStopButton()) {
+				if (elev_get_floor_sensor_signal() != -1) {
+					activeState = STOP;
+					timeCount = 0;
+				} else {
+					activeState = REST;
+				}
+			}
 			break;
 		}
-		if (getStopButton() && activeState != UNDEFINED_STATE && activeState != FULL_STOP) {
+		
+		// Perform stop button checks if system is not already in emergency stop
+		if (activeState != UNDEFINED_STATE && activeState != EMERGENCY_STOP && getStopButton()) {
 			if (activeState != RUN && elev_get_floor_sensor_signal() != -1) {
 				setDoorOpen(true);
 			} else if (dir != DIRN_STOP) {
@@ -101,19 +119,14 @@ int main() {
 			}
 			dir = DIRN_STOP;
 			setMotorDir(dir);
-			activeState = FULL_STOP;
+			activeState = EMERGENCY_STOP;
 			for (int i = FLOOR_1; i <= FLOOR_4; i++) {
 				clearOrders(floors, i);
 			}
 			updateLights(floors);
-		} else if (activeState == FULL_STOP) {
-			if (elev_get_floor_sensor_signal() != -1) {
-				activeState = STOP;
-				timeCount = 0;
-			} else {
-				activeState = REST;
-			}
 		}
+		
+		// Wait for timer thread to terminate
 		pthread_join(threadId, NULL);
 	}
 	return 0;

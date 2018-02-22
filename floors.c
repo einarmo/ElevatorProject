@@ -12,7 +12,7 @@ void updateFloorStatus(floor *floors) {
 	}
 }
 
-bool updateCurrentFloor(current_floor *current) {
+bool updateCurrentFloor(floor_num *current) {
 	int get = elev_get_floor_sensor_signal();
 	if (get != -1) {
 		if (*current != get) {
@@ -24,7 +24,7 @@ bool updateCurrentFloor(current_floor *current) {
 	return false;
 }
 
-void updateFloorLight(current_floor current) {
+void updateFloorLight(floor_num current) {
 	if (current != -1) {
 		elev_set_floor_indicator(current);
 	}
@@ -52,7 +52,7 @@ void setDoorOpen(bool status) {
 	elev_set_door_open_lamp((int) status);
 }
 
-bool hasOrdersInDir(current_floor current, floor *floors, elev_motor_direction_t dir) {
+bool hasOrdersInDir(floor_num current, floor *floors, elev_motor_direction_t dir) {
 	if ((current == FLOOR_1 && dir == DIRN_DOWN) || (current == FLOOR_4 && dir == DIRN_UP)) {
 		return false;
 	}

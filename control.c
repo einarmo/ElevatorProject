@@ -1,6 +1,6 @@
 #include "control.h"
 
-bool handleSensorUpdate(current_floor current, floor *floors, elev_motor_direction_t dir) {
+bool handleSensorUpdate(floor_num current, floor *floors, elev_motor_direction_t dir) {
 	bool upOrder = floors[current].upOrder;
 	bool downOrder = floors[current].downOrder;
 	bool innerOrder = floors[current].innerOrder;
@@ -17,7 +17,7 @@ bool handleSensorUpdate(current_floor current, floor *floors, elev_motor_directi
 	return false;
 }
 
-bool doStartup(current_floor *current, floor *floors, elev_motor_direction_t *dir, elev_motor_direction_t oldDir, bool fromRest) {
+bool doStartup(floor_num *current, floor *floors, elev_motor_direction_t *dir, elev_motor_direction_t oldDir, bool fromRest) {
 	if (hasOrdersInDir(*current, floors, oldDir)) {
 		*dir = oldDir;
 		return true;
