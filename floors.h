@@ -3,18 +3,18 @@
 
 // Current floor indicator
 typedef enum current_floor {
-	UNDEFINED = -1,
-	FLOOR_1 = 0,
-	FLOOR_2 = 1,
-	FLOOR_3 = 2,
-	FLOOR_4 = 3
+    UNDEFINED = -1, // Unknown floor, only used on startup
+    FLOOR_1 = 0,
+    FLOOR_2 = 1,
+    FLOOR_3 = 2,
+    FLOOR_4 = 3
 } floor_num;
 
 // Main floor struct, containing the current order status of each type
 typedef struct floor {
-	bool upOrder;
-	bool downOrder;
-	bool innerOrder;
+    bool upOrder;
+    bool downOrder;
+    bool innerOrder;
 } floor;
 
 // Update floor structs by reading button status
