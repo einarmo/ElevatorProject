@@ -2,7 +2,7 @@
 #include "elev.h"
 
 // Current floor indicator
-typedef enum current_floor {
+typedef enum floor_num {
     UNDEFINED = -1, // Unknown floor, only used on startup
     FLOOR_1 = 0,
     FLOOR_2 = 1,

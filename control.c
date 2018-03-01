@@ -22,9 +22,11 @@ bool doStartup(floor_num *current, floor *floors, elev_motor_direction_t *dir, e
         *dir = oldDir;
         return true;
     }
+    // If function is called from rest and elevator is between floors then the stop button
+    // was pressed, and we have to check if the elevator has orders at the floor it came from.
     if (fromRest && elev_get_floor_sensor_signal() == -1 && hasOrders(floors, *current)) {
         *dir = oldDir * -1;
-        *current = UNDEFINED;
+        *current += oldDir;
         return true;
     }
     if (hasOrdersInDir(*current, floors, oldDir * -1)) {

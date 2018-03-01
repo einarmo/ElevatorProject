@@ -1,8 +1,10 @@
 #include "elev.h"
 #include "control.h"
-#include "flow.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <unistd.h>
+#include <sys/time.h>
+#include <signal.h>
 
 typedef enum state {
     UNDEFINED_STATE = 0, // Elevator is at an unknown floor
@@ -11,6 +13,11 @@ typedef enum state {
     REST = 3, // Elevator is stopped and there are no orders
     EMERGENCY_STOP = 4 // The emergency stop button is being held down
 } state;
+
+
+const int DELAY = 10000;
+
+void timerHandler(int signum) {}
 
 int main() {
     // Initialize hardware
@@ -24,6 +31,22 @@ int main() {
     for (int i = FLOOR_1; i <= FLOOR_4; i++) {
             clearOrders(floors, i);
     }
+    
+    // Create timer structs
+    struct sigaction sa;
+    struct itimerval timer;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = &timerHandler;
+    // Bind timerHandler to SIGALARM action
+    sigaction(SIGALRM, &sa, NULL);
+    // Setup timer intervals
+    timer.it_value.tv_sec = 0;
+    timer.it_value.tv_usec = DELAY;
+    timer.it_interval.tv_sec = 0;
+    timer.it_interval.tv_usec = DELAY;
+    // Start timer
+    setitimer(ITIMER_REAL, &timer, NULL);
+
     floor_num current = UNDEFINED;
     elev_motor_direction_t dir = DIRN_UP;
     elev_motor_direction_t oldDir = dir;
@@ -33,10 +56,6 @@ int main() {
     const int THREE_SEC = 3000000 / DELAY;
     
     while (1) {
-        // Initialize timing thread
-        pthread_t threadId;
-        pthread_create(&threadId, NULL, cycle, NULL);
-        
         // Main state system
         switch(activeState) {
             case RUN:
@@ -124,10 +143,9 @@ int main() {
                 clearOrders(floors, i);
             }
             updateLights(floors);
-        }
-        
-        // Wait for timer thread to terminate
-        pthread_join(threadId, NULL);
+        } 
+        // Wait for action, in this program this can only be SIGALARM
+        pause();
     }
     return 0;
 }
